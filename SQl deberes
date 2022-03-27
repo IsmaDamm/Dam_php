@@ -1,0 +1,89 @@
+1.
+
+create or alter function DOMICILIO_ENTREGA1(@p_nif char(9))
+returns varchar(80)
+begin
+return(
+	select concat( domicilios.direccion,' (', domicilios.codigo_postal, ', ', poblaciones.nombre, ')') as domicili
+	from domicilios
+	inner join clientes
+	on clientes.nif = domicilios.cliente
+	inner join poblaciones
+	on poblaciones.id_poblacion = domicilios.poblacion
+	where @p_nif = clientes.nif and domicilios.entrega = 1)
+END
+GO
+
+2.
+
+create or alter function NUM_PEDIDO(@p_nif char(9))
+returns char(10)
+AS
+BEGIN
+return(
+select distinct CONCAT('P',FORMAT(GETDATE(), 'ddMMyy') ,substring (clientes.telefono,7,3)) as codigo
+from pedidos
+inner join clientes
+on pedidos.cliente = clientes.nif
+where @p_nif = clientes.nif)
+END
+GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3.
+
+create or alter procedure NUEVO_PEDIDO
+@p_cliente char(9),
+@p_gastos decimal(5,2),
+@p_metodopago varchar(80),
+@p_empresa varchar(80)
+as
+begin
+	declare @v_fecha datetime
+	set @v_fecha = FORMAT(GETDATE(), 'yyMMdd')
+	insert into pedidos(pedidos.numero,pedidos.cliente,pedidos.fecha,pedidos.gastos_envio,pedidos.metodo_pago,empresa_transporte)
+	values(dbo.NUM_PEDIDO(@p_cliente),@p_cliente,@v_fecha,@p_gastos,@p_metodopago,@p_empresa)
+end
+go
+
+
+
+4.
+create or alter procedure NUEVO_POBLACION
+@p_poblacio varchar(20),
+@p_provincia varchar(20)
+as
+begin
+		if(@p_provincia = provincies.nombre)
+		begin
+		insert into poblaciones(poblaciones.nombre)
+		values(@p_poblacio)
+		end
+		else
+		begin
+		insert into provincias(provincias.nombre)
+		values(@p_provincia)
+		insert into poblaciones(poblaciones.nombre)
+		values(@p_poblacio)
+		end
+end
+go
+
+
+
+
+
